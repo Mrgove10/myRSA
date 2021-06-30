@@ -100,7 +100,7 @@ def readFile(file: str) -> str:
     f.close()
     return content
 
-def encode(keyFile, string):
+def encode(keyFile: str, string: str):
     """
     Encode a file using the public key
     """
@@ -110,39 +110,106 @@ def encode(keyFile, string):
     if (checkKeyFile(keyFile,"public")):        
         f = open(keyFile)
         keyData = extractParamsFromKey(f.readlines()[1]) # read the second line of the file and extract the param
-        print("keydata", keyData)
+        print("keydata (publ) :", keyData)
+        
+        # take the string and reverse it (because we are doing everything from right to left)
+        #string = ''.join(reversed(string))
+        print(string)
         
         # transform the ascii string into a series of numbers
         asciiToInt = ""
         for char in string :
-            asciiToInt += str(ord(char))
+            asciiToInt += str(ord(char)).zfill(3)
         print("ascii to int", asciiToInt)
         
-        # calculate the block length
-        blocklen = len(str(keyData[0]))
-        print("block size is ",blocklen )
+        # test to make sure everything works 
+        #print(multipleIntsToChar(asciiToInt))
         
-        # cut the ascii numbers into bloks of that length.
-        blocks = wrap(asciiToInt, blocklen)
-        # print(blocks)
+        # calculate the block length
+        blocklen = len(str(keyData[0])) -1
+        print("block size is",blocklen )
+        
+        # split the string into blocks
+        # start bu reversing the string so we can start left to right
+        tmp = asciiToInt[::-1]
+        # cut them
+        blocks = wrap(tmp, blocklen)
+        # reverse the lsit of cut
+        blocks.reverse()
+        # inside eecaht cut reserve the characters
+        for i in range(len(blocks)):
+            blocks[i] = blocks[i][::-1]
+        print(blocks)
         
         # make sur that every block is the corect length, overwise add padding
         for i in range(len(blocks)):
             if(len(str(blocks[i])) != blocklen):
                 print("adding padding")
                 blocks[i] = blocks[i].zfill(blocklen)
-
+        print("blocks after padding :", blocks)
+        
         # crypt everyblock
         tempCryptString = ""
         for i in range(len(blocks)): 
             tempCryptString += str(calculateCrypt(blocks[i], keyData[1], keyData[0]))
         print("encrypted string :",tempCryptString)
+        
         # write the contentes to a file
-        writeToFile("encoded", tempCryptString)
-
-        # writeToFile("encoded", stringToHextoBase64(tempCryptString))
+        hexstr = stringToHextoBase64(tempCryptString)
+        print("encrypted string hex :",hexstr)
+        writeToFile("encoded", hexstr)
     else: 
         print("keyfile is incorrect")
+
+def decode(keyFile: str, string : str):
+    """
+    decode a file using the private key
+    """
+    print("Decoding message ...")
+    print("Is private key file ok ?", checkKeyFile(keyFile,"private"))
+
+    if (checkKeyFile(keyFile,"private")):        
+        f = open(keyFile)
+        keyData = extractParamsFromKey(f.readlines()[1]) # read the second line of the file and extract the param
+        print("keydata (priv) :", keyData)
+        
+        # get block length
+        blocklen = len(str(keyData[0])) -1
+        print("block size is",blocklen)
+        
+        # transform hex to string
+        string = str(base64ToHexToString(string))
+        # print(string)
+
+        # split the string into blocks
+        # start bu reversing the string so we can start left to right
+        tmp = string[::-1]
+        # cut them
+        blocks = wrap(tmp, blocklen)
+        # reverse the lsit of cut
+        blocks.reverse()
+        # inside eecaht cut reserve the characters
+        for i in range(len(blocks)):
+            blocks[i] = blocks[i][::-1]
+        print(blocks)
+        
+        
+        # blocks = wrap(string, blocklen)
+        print("encrypted bloks", blocks)
+        
+        # decode for each block
+        tmpDecoded = ""
+        for i in range(len(blocks)):    
+            tmpDecoded += str(calculateDeCrypt(str(blocks[i]), keyData[1], keyData[0]))
+        print("decrypted ints :", tmpDecoded)
+        
+        # write the decoded string to a file
+        writeToFile("decoded", tmpDecoded)
+        print("decrypted string : ", multipleIntsToChar(tmpDecoded))
+        # writeToFile("decoded_clear", multipleIntsToChar(tmpDecoded))
+    else: 
+        print("keyfile is incorrect")
+
 
 def calculateCrypt(asci: int, e: int, n: int) -> int:
     """
@@ -161,7 +228,6 @@ def stringToHextoBase64(inputString: str) -> str:
     input = a string of numbers
     Takee a string, transform it to int then to hex then to base64
     """
-    inputString = str(inputString)
     message = hex(int(inputString))
     message_bytes = message.encode('ascii')
     base64_bytes = base64.b64encode(message_bytes)
@@ -172,35 +238,21 @@ def base64ToHexToString(inputString: str) -> str:
     input = a base64 string
     Take the abse 64, make it  ahex then a string
     """
+    inputString = base64.b64decode(inputString).decode('ascii')
+    return int(inputString, 0)
 
-def decode(keyFile: str, string : str):
+def multipleIntsToChar(inpt: str) -> str :
     """
-    decode a file using the private key
+    Transform a series of ints to ascii charasters
+    basicly separate every 3 chars 
     """
-    print("Decoding message ...")
-    print("Is private key file ok ?", checkKeyFile(keyFile,"private"))
-
-    if (checkKeyFile(keyFile,"private")):        
-        f = open(keyFile)
-        keyData = extractParamsFromKey(f.readlines()[1]) # read the second line of the file and extract the param
-        print("keydata", keyData)
-        
-        blocklen = len(str(keyData[0]))
-        print("block size is ",blocklen)
-        
-        # split the string into blocks
-        blocks = wrap(string, blocklen)
-        print(blocks)
-        
-        tmpDecoded = ""
-        for i in range(len(blocks)):    
-            tmpDecoded += str(calculateDeCrypt(str(blocks[i]), keyData[1], keyData[0]))
-        print(tmpDecoded)
-
-        
-    else: 
-        print("keyfile is incorrect")
-
+    inpt = str(inpt)
+    chars = wrap(inpt, 3)
+    tmp = ""
+    for c in chars:
+        tmp += chr(int(c))
+    # print(tmp)
+    return tmp
 
 def prime_factors(n) -> []:
     """
@@ -279,5 +331,5 @@ def checkKeyFile(file : str,typ : str) -> bool:
 
 # entry point
 generateKeys()
-encode("test.pub", "Hello World! I hope you are having a great day!")
+encode("test.pub", "Hello World !")
 decode("test.priv", readFile("encoded"))

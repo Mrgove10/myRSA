@@ -1,4 +1,4 @@
 *.priv
 *.pub
-encoded
-decoded
+encoded*
+decoded*
