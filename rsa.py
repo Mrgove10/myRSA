@@ -30,13 +30,13 @@ def generateKeyFile(n: int, e: int, typ: str):
     key = str(base64_bytes.decode("ascii")) # we decode to remove the wierd characters
     
     if typ == "private" :
-        f = open("test.priv", "w")
+        f = open("keys/test.priv", "w")
         f.write("---begin monRSA private key---\n")
         f.write(key+'\n')
         f.write("---end monRSA key---")
         f.close()
     elif typ == "public" :
-        f = open("test.pub", "w")
+        f = open("keys/test.pub", "w")
         f.write("---begin monRSA public key---\n")
         f.write(key+'\n')
         f.write("---end monRSA key---")
@@ -145,9 +145,7 @@ def encode(keyFile: str, string: str):
         
         # make sur that every block is the corect length, overwise add padding
         for i in range(len(blocks)):
-            if(len(str(blocks[i])) != blocklen): # TODO : don't need to check length 
-                print("adding padding")
-                blocks[i] = blocks[i].zfill(blocklen)
+            blocks[i] = blocks[i].zfill(blocklen)
         print("blocks after padding :", blocks)
         
         # crypt everyblock
@@ -356,12 +354,12 @@ def checkKeyFile(file : str,typ : str) -> bool:
             return False
 
 # entry point
-generateKeys()
 print("###########")
-encode("test.pub", readFile("encoded_clear"))
+#generateKeys()
 print("###########")
-decode("test.priv", readFile("encoded"))
-if(readFile("encoded_clear") == readFile("decoded_clear")):
-    print("yay !")
-else :
-    print("error")
+#encode("keys/test.pub", readFile("encoded_clear"))
+#encode("keys/e.pub",readFile("encoded_clear"))
+print("###########")
+#decode("keys/test.priv", readFile("encoded"))
+#decode("keys/e.priv",readFile("encoded_e"))
+print("###########")
