@@ -334,6 +334,7 @@ def checkKeyFile(file : str,typ : str) -> bool:
     check if a key file is or is not valid.
     the 2nd parameter is eiver "private" or "public" defining what key to check
     """
+    return True #TODO : improuve this
     with open(file, "r") as file:
         first_line = file.readline()
         for last_line in file:
@@ -355,11 +356,11 @@ def checkKeyFile(file : str,typ : str) -> bool:
 
 # entry point
 print("###########")
-#generateKeys()
+generateKeys()
 print("###########")
-#encode("keys/test.pub", readFile("encoded_clear"))
+encode("keys/test.pub", readFile("encoded_clear"))
 #encode("keys/e.pub",readFile("encoded_clear"))
 print("###########")
-#decode("keys/test.priv", readFile("encoded"))
+decode("keys/test.priv", readFile("encoded"))
 #decode("keys/e.priv",readFile("encoded_e"))
 print("###########")
