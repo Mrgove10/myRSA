@@ -49,8 +49,10 @@ def generateKeys():
     """
     General all the required numbers
     """
-    p = nth_prime(97885344)
-    q = nth_prime(85785656)
+    # p = nth_prime(97885344)
+    # q = nth_prime(85785656)
+    p = nth_prime(1256)
+    q = nth_prime(1478)
     print("p", p)
     print("q", q)
     n = p*q
@@ -151,13 +153,15 @@ def encode(keyFile: str, string: str):
         # crypt everyblock
         tempCryptString = ""
         for i in range(len(blocks)): 
-            tempCryptString += str(calculateCrypt(blocks[i], keyData[1], keyData[0]))
+            blockEncrypted = str(calculateCrypt(blocks[i], keyData[1], keyData[0]))
+            print(blockEncrypted)
+            tempCryptString += blockEncrypted
         print("encrypted string :",tempCryptString)
         
         # write the contentes to a file
-        hexstr = stringToHextoBase64(tempCryptString)
-        print("encrypted string hex :",hexstr)
-        writeToFile("encoded", hexstr)
+        # hexstr = stringToHextoBase64(tempCryptString)
+        # print("encrypted string hex :",hexstr)
+        writeToFile("encoded", tempCryptString)
     else: 
         print("keyfile is incorrect")
 
@@ -178,29 +182,32 @@ def decode(keyFile: str, string : str):
         print("block size is",blocklen)
         
         # transform hex to string
-        string = str(base64ToHexToString(string))
+        # string = str(base64ToHexToString(string))
+        string = str(string)
         # print(string)
-
         # split the string into blocks
         # start bu reversing the string so we can start left to right
-        tmp = string[::-1]
+        #tmp = string[::-1]
         # cut them
-        blocks = wrap(tmp, blocklen)
+        blocks = wrap(string, blocklen)
+        #print(blocks)
         # reverse the lsit of cut
-        blocks.reverse()
-        # inside eecaht cut reserve the characters
-        for i in range(len(blocks)):
-            blocks[i] = blocks[i][::-1]
-        print(blocks)
-        
-        
+        # blocks.reverse()
+        # print(blocks)
+        # # inside each cut reserve the characters
+        # for i in range(len(blocks)):
+        #     blocks[i] = blocks[i][::-1]
+        # print(blocks)
+
         # blocks = wrap(string, blocklen)
         print("encrypted bloks", blocks)
         
         # decode for each block
         tmpDecoded = ""
-        for i in range(len(blocks)):    
-            tmpDecoded += str(calculateDeCrypt(str(blocks[i]), keyData[1], keyData[0]))
+        for i in range(len(blocks)):  
+            blockDecoded = str(calculateDeCrypt(blocks[i], keyData[1], keyData[0]))
+            print(blockDecoded)
+            tmpDecoded += blockDecoded
         print("decrypted ints :", tmpDecoded)
         
         # write the decoded string to a file
@@ -210,18 +217,17 @@ def decode(keyFile: str, string : str):
     else: 
         print("keyfile is incorrect")
 
-
 def calculateCrypt(asci: int, e: int, n: int) -> int:
     """
     Calculate the crypt int
     """
-    return int(asci)^e % n
+    return pow(int(asci),e,n)
 
 def calculateDeCrypt(asci: int, d: int, n: int) -> int:
     """
     Calculate the decrypt int
     """
-    return int(asci)^d % n
+    return pow(int(asci),d,n)
 
 def stringToHextoBase64(inputString: str) -> str: 
     """
@@ -248,10 +254,11 @@ def multipleIntsToChar(inpt: str) -> str :
     """
     inpt = str(inpt)
     chars = wrap(inpt, 3)
+    print(chars)
     tmp = ""
     for c in chars:
         tmp += chr(int(c))
-    # print(tmp)
+    print(tmp)
     return tmp
 
 def prime_factors(n) -> []:
@@ -308,7 +315,7 @@ def genED(nn: int) -> []:
 def checkKeyFile(file : str,typ : str) -> bool:
     """
     check if a key file is or is not valid.
-    the 3rd parameter is eiver "private" or "public" defining what key to generate
+    the 2nd parameter is eiver "private" or "public" defining what key to check
     """
     with open(file, "r") as file:
         first_line = file.readline()
@@ -331,5 +338,5 @@ def checkKeyFile(file : str,typ : str) -> bool:
 
 # entry point
 generateKeys()
-encode("test.pub", "Hello World !")
+encode("test.pub", readFile("encoded_clear"))
 decode("test.priv", readFile("encoded"))
