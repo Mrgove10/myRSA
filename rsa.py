@@ -129,7 +129,7 @@ def encode(keyFile: str, string: str):
         
         # calculate the block length
         blocklen = len(str(keyData[0])) -1
-        print("block size is",blocklen )
+        print("block size is", blocklen)
         
         # split the string into blocks
         # start bu reversing the string so we can start left to right
@@ -145,15 +145,18 @@ def encode(keyFile: str, string: str):
         
         # make sur that every block is the corect length, overwise add padding
         for i in range(len(blocks)):
-            if(len(str(blocks[i])) != blocklen):
+            if(len(str(blocks[i])) != blocklen): # TODO : don't need to check length 
                 print("adding padding")
                 blocks[i] = blocks[i].zfill(blocklen)
         print("blocks after padding :", blocks)
         
         # crypt everyblock
         tempCryptString = ""
+        print("encrypted blocks:")
         for i in range(len(blocks)): 
             blockEncrypted = str(calculateCrypt(blocks[i], keyData[1], keyData[0]))
+            # print(blockEncrypted)
+            blockEncrypted = blockEncrypted.zfill(blocklen+1)
             print(blockEncrypted)
             tempCryptString += blockEncrypted
         print("encrypted string :",tempCryptString)
@@ -178,26 +181,13 @@ def decode(keyFile: str, string : str):
         print("keydata (priv) :", keyData)
         
         # get block length
-        blocklen = len(str(keyData[0])) -1
+        blocklen = len(str(keyData[0]))
         print("block size is",blocklen)
         
         # transform hex to string
         # string = str(base64ToHexToString(string))
         string = str(string)
-        # print(string)
-        # split the string into blocks
-        # start bu reversing the string so we can start left to right
-        #tmp = string[::-1]
-        # cut them
         blocks = wrap(string, blocklen)
-        #print(blocks)
-        # reverse the lsit of cut
-        # blocks.reverse()
-        # print(blocks)
-        # # inside each cut reserve the characters
-        # for i in range(len(blocks)):
-        #     blocks[i] = blocks[i][::-1]
-        # print(blocks)
 
         # blocks = wrap(string, blocklen)
         print("encrypted bloks", blocks)
@@ -207,13 +197,40 @@ def decode(keyFile: str, string : str):
         for i in range(len(blocks)):  
             blockDecoded = str(calculateDeCrypt(blocks[i], keyData[1], keyData[0]))
             print(blockDecoded)
+            blockDecoded = blockDecoded.zfill(blocklen-1)
+            print(blockDecoded)
+
             tmpDecoded += blockDecoded
         print("decrypted ints :", tmpDecoded)
         
+
+        # split the string into blocks
+        # start bu reversing the string so we can start left to right
+        tmp = tmpDecoded[::-1]
+        # cut them
+        blocks = wrap(tmp, 3)
+        # reverse the lsit of cut
+        blocks.reverse()
+        # inside eecaht cut reserve the characters
+        for i in range(len(blocks)):
+            blocks[i] = blocks[i][::-1]
+        # print(blocks)
+        
+        # make sur that every block is the corect length, overwise add padding
+        for i in range(len(blocks)):
+            if(len(str(blocks[i])) != 3):
+                print("adding padding")
+                blocks[i] = blocks[i].zfill(3)
+        print("blocks after padding :", blocks)
+        
+        tmpfinal = ""
+        for i in range(len(blocks)):  
+            tmpfinal += blocks[i]
+        
         # write the decoded string to a file
-        writeToFile("decoded", tmpDecoded)
-        print("decrypted string : ", multipleIntsToChar(tmpDecoded))
-        # writeToFile("decoded_clear", multipleIntsToChar(tmpDecoded))
+        writeToFile("decoded", tmpfinal)
+        print("decrypted string : ", multipleIntsToChar(tmpfinal))
+        writeToFile("decoded_clear", multipleIntsToChar(tmpDecoded))
     else: 
         print("keyfile is incorrect")
 
@@ -338,5 +355,11 @@ def checkKeyFile(file : str,typ : str) -> bool:
 
 # entry point
 generateKeys()
+print("###########")
 encode("test.pub", readFile("encoded_clear"))
+print("###########")
 decode("test.priv", readFile("encoded"))
+if(readFile("encoded_clear") == readFile("decoded_clear")):
+    print("yay !")
+else :
+    print("error")
