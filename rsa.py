@@ -49,10 +49,10 @@ def generateKeys():
     """
     General all the required numbers
     """
-    # p = nth_prime(97885344)
-    # q = nth_prime(85785656)
-    p = nth_prime(1256)
-    q = nth_prime(1478)
+    p = nth_prime(97885344)
+    q = nth_prime(85785656)
+    #p = nth_prime(1256)
+    #q = nth_prime(1478)
     print("p", p)
     print("q", q)
     n = p*q
@@ -157,14 +157,14 @@ def encode(keyFile: str, string: str):
             blockEncrypted = str(calculateCrypt(blocks[i], keyData[1], keyData[0]))
             # print(blockEncrypted)
             blockEncrypted = blockEncrypted.zfill(blocklen+1)
-            print(blockEncrypted)
+            # print(blockEncrypted)
             tempCryptString += blockEncrypted
         print("encrypted string :",tempCryptString)
         
         # write the contentes to a file
-        # hexstr = stringToHextoBase64(tempCryptString)
-        # print("encrypted string hex :",hexstr)
-        writeToFile("encoded", tempCryptString)
+        hexstr = intToHexToBase64(tempCryptString)
+        print("encrypted string hex :",hexstr)
+        writeToFile("encoded", hexstr)
     else: 
         print("keyfile is incorrect")
 
@@ -185,8 +185,8 @@ def decode(keyFile: str, string : str):
         print("block size is",blocklen)
         
         # transform hex to string
-        # string = str(base64ToHexToString(string))
-        string = str(string)
+        string = str(base64ToHexToInt(string))
+        #string = str(string)
         blocks = wrap(string, blocklen)
 
         # blocks = wrap(string, blocklen)
@@ -196,10 +196,9 @@ def decode(keyFile: str, string : str):
         tmpDecoded = ""
         for i in range(len(blocks)):  
             blockDecoded = str(calculateDeCrypt(blocks[i], keyData[1], keyData[0]))
-            print(blockDecoded)
+            # print(blockDecoded)
             blockDecoded = blockDecoded.zfill(blocklen-1)
-            print(blockDecoded)
-
+            # print(blockDecoded)
             tmpDecoded += blockDecoded
         print("decrypted ints :", tmpDecoded)
         
@@ -246,23 +245,26 @@ def calculateDeCrypt(asci: int, d: int, n: int) -> int:
     """
     return pow(int(asci),d,n)
 
-def stringToHextoBase64(inputString: str) -> str: 
+def intToHexToBase64(inputString: str) -> str: 
     """
     input = a string of numbers
     Takee a string, transform it to int then to hex then to base64
     """
     message = hex(int(inputString))
+    #print("hex:", message)
     message_bytes = message.encode('ascii')
     base64_bytes = base64.b64encode(message_bytes)
-    return str(base64_bytes.decode("ascii"))
+    base64_message = base64_bytes.decode('ascii')
+    return str(base64_message)
 
-def base64ToHexToString(inputString: str) -> str:
+def base64ToHexToInt(inputString: str) -> str:
     """
     input = a base64 string
     Take the abse 64, make it  ahex then a string
     """
     inputString = base64.b64decode(inputString).decode('ascii')
-    return int(inputString, 0)
+    #print(inputString)
+    return int(inputString,0)
 
 def multipleIntsToChar(inpt: str) -> str :
     """
