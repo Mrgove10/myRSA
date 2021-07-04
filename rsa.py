@@ -3,6 +3,9 @@ from random import *
 import math
 import base64
 from textwrap import wrap
+import argparse
+
+verbose = False
 
 def isPrime(x: int) -> bool:
     """
@@ -17,7 +20,7 @@ def isPrime(x: int) -> bool:
             return False
     return True
 
-def generateKeyFile(n: int, e: int, typ: str):
+def generateKeyFile(n: int, e: int, typ: str, filename: str):
     """
     Generathe the files for the keys 
     the 3rd parameter is eiver "private" or "public" defining what key to generate
@@ -30,22 +33,22 @@ def generateKeyFile(n: int, e: int, typ: str):
     key = str(base64_bytes.decode("ascii")) # we decode to remove the wierd characters
     
     if typ == "private" :
-        f = open("keys/test.priv", "w")
-        f.write("---begin monRSA private key---\n")
+        f = open("keys/" + filename + ".priv", "w")
+        f.write("---begin " + filename + " private key---\n")
         f.write(key+'\n')
-        f.write("---end monRSA key---")
+        f.write("---end " + filename + " key---")
         f.close()
     elif typ == "public" :
-        f = open("keys/test.pub", "w")
-        f.write("---begin monRSA public key---\n")
+        f = open("keys/" + filename + ".pub", "w")
+        f.write("---begin " + filename + " public key---\n")
         f.write(key+'\n')
-        f.write("---end monRSA key---")
+        f.write("---end " + filename + " key---")
         f.close()
     else :
         print("wrong type")
         return
 
-def generateKeys():
+def generateKeys(filename: str):
     """
     General all the required numbers
     """
@@ -53,21 +56,21 @@ def generateKeys():
     q = primesieve.nth_prime(85785656)
     #p = nth_prime(1256)
     #q = nth_prime(1478)
-    print("p", p)
-    print("q", q)
+    if verbose : print("p", p)
+    if verbose : print("q", q)
     n = p*q
-    print("n", n)
+    if verbose : print("n", n)
     nn = (p-1)*(q-1)
-    print("nn",nn)
+    if verbose : print("nn",nn)
     temp = genED(nn)
     e = temp[0]
-    print("e",e)
+    if verbose : print("e",e)
     d = temp[1]
-    print("d",d)
+    if verbose : print("d",d)
     ed = temp[2]
-    print("ed",ed)
-    generateKeyFile(n, e, "public")
-    generateKeyFile(n, d, "private")
+    if verbose : print("ed",ed)
+    generateKeyFile(n, e, "public", filename)
+    generateKeyFile(n, d, "private", filename)
 
 def extractParamsFromKey(key: str) -> []:
     """
@@ -82,7 +85,7 @@ def extractParamsFromKey(key: str) -> []:
     param1 = int(param1, 16)
     param2 = int(param2, 16)
     
-    # print(param1,param2)
+    if verbose : print(param1,param2)
     return [param1,param2]
 
 def writeToFile(file: str, text: str):
@@ -102,7 +105,7 @@ def readFile(file: str) -> str:
     f.close()
     return content
 
-def encode(keyFile: str, string: str):
+def encode(keyFile: str, string: str, filename: str=""):
     """
     Encode a file using the public key
     """
@@ -112,24 +115,21 @@ def encode(keyFile: str, string: str):
     if (checkKeyFile(keyFile,"public")):        
         f = open(keyFile)
         keyData = extractParamsFromKey(f.readlines()[1]) # read the second line of the file and extract the param
-        print("keydata (publ) :", keyData)
+        if verbose : print("keydata (publ) :", keyData)
         
         # take the string and reverse it (because we are doing everything from right to left)
-        #string = ''.join(reversed(string))
-        print(string)
+
+        if verbose : print(string)
         
         # transform the ascii string into a series of numbers
         asciiToInt = ""
         for char in string :
             asciiToInt += str(ord(char)).zfill(3)
-        print("ascii to int", asciiToInt)
-        
-        # test to make sure everything works 
-        #print(multipleIntsToChar(asciiToInt))
-        
+        if verbose : print("ascii to int", asciiToInt)
+
         # calculate the block length
         blocklen = len(str(keyData[0])) -1
-        print("block size is", blocklen)
+        if verbose : print("block size is", blocklen)
         
         # split the string into blocks
         # start bu reversing the string so we can start left to right
@@ -141,32 +141,35 @@ def encode(keyFile: str, string: str):
         # inside eecaht cut reserve the characters
         for i in range(len(blocks)):
             blocks[i] = blocks[i][::-1]
-        print(blocks)
+        if verbose : print(blocks)
         
         # make sur that every block is the corect length, overwise add padding
         for i in range(len(blocks)):
             blocks[i] = blocks[i].zfill(blocklen)
-        print("blocks after padding :", blocks)
+        if verbose : print("blocks after padding :", blocks)
         
         # crypt everyblock
         tempCryptString = ""
-        print("encrypted blocks:")
+        if verbose : print("encrypted blocks:")
         for i in range(len(blocks)): 
             blockEncrypted = str(calculateCrypt(blocks[i], keyData[1], keyData[0]))
-            # print(blockEncrypted)
+            if verbose : print(blockEncrypted)
             blockEncrypted = blockEncrypted.zfill(blocklen+1)
-            # print(blockEncrypted)
+            if verbose : print(blockEncrypted)
             tempCryptString += blockEncrypted
-        print("encrypted string :",tempCryptString)
+        if verbose : print("encrypted string :",tempCryptString)
         
         # write the contentes to a file
         hexstr = intToHexToBase64(tempCryptString)
-        print("encrypted string hex :",hexstr)
-        writeToFile("encoded", hexstr)
+        if(filename == ""):
+            print("Encrypted :")
+            print(hexstr)
+        else :
+            writeToFile(filename, hexstr)
     else: 
         print("keyfile is incorrect")
 
-def decode(keyFile: str, string : str):
+def decode(keyFile: str, string : str, filename: str=""):
     """
     decode a file using the private key
     """
@@ -176,11 +179,11 @@ def decode(keyFile: str, string : str):
     if (checkKeyFile(keyFile,"private")):        
         f = open(keyFile)
         keyData = extractParamsFromKey(f.readlines()[1]) # read the second line of the file and extract the param
-        print("keydata (priv) :", keyData)
+        if verbose : print("keydata (priv) :", keyData)
         
         # get block length
         blocklen = len(str(keyData[0]))
-        print("block size is",blocklen)
+        if verbose : print("block size is",blocklen)
         
         # transform hex to string
         string = str(base64ToHexToInt(string))
@@ -188,17 +191,17 @@ def decode(keyFile: str, string : str):
         blocks = wrap(string, blocklen)
 
         # blocks = wrap(string, blocklen)
-        print("encrypted bloks", blocks)
+        if verbose : print("encrypted bloks", blocks)
         
         # decode for each block
         tmpDecoded = ""
         for i in range(len(blocks)):  
             blockDecoded = str(calculateDeCrypt(blocks[i], keyData[1], keyData[0]))
-            # print(blockDecoded)
+            if verbose : print(blockDecoded)
             blockDecoded = blockDecoded.zfill(blocklen-1)
-            # print(blockDecoded)
+            if verbose : print(blockDecoded)
             tmpDecoded += blockDecoded
-        print("decrypted ints :", tmpDecoded)
+        if verbose : print("decrypted ints :", tmpDecoded)
         
 
         # split the string into blocks
@@ -211,23 +214,25 @@ def decode(keyFile: str, string : str):
         # inside eecaht cut reserve the characters
         for i in range(len(blocks)):
             blocks[i] = blocks[i][::-1]
-        # print(blocks)
+        if verbose : print(blocks)
         
         # make sur that every block is the corect length, overwise add padding
         for i in range(len(blocks)):
             if(len(str(blocks[i])) != 3):
-                print("adding padding")
+                if verbose : print("adding padding")
                 blocks[i] = blocks[i].zfill(3)
-        print("blocks after padding :", blocks)
+        if verbose : print("blocks after padding :", blocks)
         
         tmpfinal = ""
         for i in range(len(blocks)):  
             tmpfinal += blocks[i]
         
         # write the decoded string to a file
-        writeToFile("decoded", tmpfinal)
-        print("decrypted string : ", multipleIntsToChar(tmpfinal))
-        writeToFile("decoded_clear", multipleIntsToChar(tmpDecoded))
+        if(filename == ""):
+            print("Decrypted :")
+            print(multipleIntsToChar(tmpDecoded))
+        else :
+            writeToFile(filename, multipleIntsToChar(tmpDecoded))
     else: 
         print("keyfile is incorrect")
 
@@ -249,7 +254,6 @@ def intToHexToBase64(inputString: str) -> str:
     Takee a string, transform it to int then to hex then to base64
     """
     message = hex(int(inputString))
-    #print("hex:", message)
     message_bytes = message.encode('ascii')
     base64_bytes = base64.b64encode(message_bytes)
     base64_message = base64_bytes.decode('ascii')
@@ -261,7 +265,6 @@ def base64ToHexToInt(inputString: str) -> str:
     Take the abse 64, make it  ahex then a string
     """
     inputString = base64.b64decode(inputString).decode('ascii')
-    #print(inputString)
     return int(inputString,0)
 
 def multipleIntsToChar(inpt: str) -> str :
@@ -271,11 +274,11 @@ def multipleIntsToChar(inpt: str) -> str :
     """
     inpt = str(inpt)
     chars = wrap(inpt, 3)
-    print(chars)
+    if verbose : print(chars)
     tmp = ""
     for c in chars:
         tmp += chr(int(c))
-    print(tmp)
+    if verbose : print(tmp)
     return tmp
 
 def prime_factors(n) -> []:
@@ -308,26 +311,26 @@ def genED(nn: int) -> []:
         f=prime_factors(temp) #calculate the prime numbers for that number
         if(f != []):
             e = int(f[0]) # take the first one
-            # print("e",e)
+            if verbose : print("e",e)
             f.remove(e)#remove it from the lsit  
             # multipley all the over one together
             d = 1
             for x in f:
                 d = d * x
-            # print("d",d)
+            if verbose : print("d",d)
             if(e!=d): # diffrent numbers
                 if(isPrime(e) or isPrime(d)): # e or d is prime 
                     ed = e*d
                     if(not isPrime(ed)): # ed can not be prime
                             found = True
-                            # print("ed", ed)
+                            if verbose : print("ed", ed)
                             return [e,d,ed]
                     else:
-                        print("ed can not be prime")
+                        if verbose : print("ed can not be prime")
                 else:
-                    print("one number needs to be prime")
+                    if verbose : print("one number needs to be prime")
             else:
-                print("e can not be equal to d")
+                if verbose : print("e can not be equal to d")
 
 def checkKeyFile(file : str,typ : str) -> bool:
     """
@@ -354,13 +357,54 @@ def checkKeyFile(file : str,typ : str) -> bool:
             print("wrong type")
             return False
 
-# entry point
-print("###########")
-generateKeys()
-print("###########")
-encode("keys/test.pub", readFile("encoded_clear"))
-#encode("keys/e.pub",readFile("encoded_clear"))
-print("###########")
-decode("keys/test.priv", readFile("encoded"))
-#decode("keys/e.priv",readFile("encoded_e"))
-print("###########")
+def parse_args():
+    """
+    Parse the arguments
+    """
+    parser = argparse.ArgumentParser()    
+    parser.add_argument("action", help="Action to execute : keygen,crypt,decrypt,help")
+    parser.add_argument("key", help="key to use")
+    parser.add_argument("text", help="text to encrypt")
+    parser.add_argument("-f", "--filename", help="name of the keys to use", default="")
+    parser.add_argument("-s", "--size", help="size of the key size", default="10")
+    parser.add_argument("-i", "--input", help="use a text file instead of a string", default=False)
+    parser.add_argument("-o", "--output", help="name of the file to output instead of printing the output", default="")
+    parser.add_argument("-v", "--verbose", help="Talk more", default=False)
+
+    parser.add_subparsers
+    return parser.parse_args()
+
+# Entry point
+args = parse_args()
+print(args.verbose)
+print(args.action)
+print(args.key)
+print(args.text)
+print(args.filename)
+print(args.input)
+print(args.output)
+print(args.size)
+
+
+if args.action == "keygen":
+    if(args.filename == ""): 
+        # do not use a custom key name
+        generateKeys("monRSA")
+    else:
+        # use a custom key name
+        generateKeys(args.filename)
+elif args.action == "crypt":
+    if(args.input == ""):
+        # use text passed in args
+        encode(args.key, args.text)
+    else : 
+        # use files
+        encode(args.key, readFile(args.text))
+
+elif args.action == "decrypt":
+    if(args.input == ""):
+        # use text passed in args
+        encode(args.key, args.text)
+    else : 
+        # use files
+        decode(args.key, readFile(args.text))
