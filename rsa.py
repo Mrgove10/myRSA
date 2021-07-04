@@ -1,4 +1,4 @@
-from primesieve import *
+import primesieve
 from random import *
 import math
 import base64
@@ -49,8 +49,8 @@ def generateKeys():
     """
     General all the required numbers
     """
-    p = nth_prime(97885344)
-    q = nth_prime(85785656)
+    p = primesieve.nth_prime(97885344)
+    q = primesieve.nth_prime(85785656)
     #p = nth_prime(1256)
     #q = nth_prime(1478)
     print("p", p)

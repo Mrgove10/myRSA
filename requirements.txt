@@ -1,1 +1,2 @@
-primesieve = 2.3.0
+primesieve == 2.3.0
+argparse
