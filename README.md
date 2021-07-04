@@ -31,18 +31,18 @@ With text in the command:
 `python rsa.py crypt -k monRSA.pub -t "my test Text"`
 
 With files:
-`python rsa.py crypt -k monRSA.pub -t myFile.txt -i`
+`python rsa.py crypt -k monRSA.pub -i myFile.txt`
 
 Export to a file:
-`python rsa.py crypt -k monRSA.pub -t "my test Text" -o output.txt`
+`python rsa.py crypt -k monRSA.pub -i myFile.txt -o output.txt`
 
 ## decode
 
 With text in the command:
-`python rsa.py decrypt -k monRSA.priv -t "MyEncryptedSting"`
+`python rsa.py decrypt -k monRSA.priv -t "MHg5NzEwOTg0YTE2OGYxNjU5NmNkYjgwYTc2Yzg4YTc="`
 
 With files:
-`python rsa.py decrypt -k monRSA.priv -t myFile.txt -i` 
+`python rsa.py decrypt -k monRSA.priv -i output.txt`
 
 Export to a file:
 `python rsa.py crypt -k monRSA.pub -t "my test Text" -o output.txt`

@@ -2,3 +2,5 @@
 *.pub
 encoded*
 decoded*
+__pycache__
+*.test
