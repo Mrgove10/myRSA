@@ -8,6 +8,9 @@ DIY RSA implementation from scratch
   - [Generate keys](#generate-keys)
   - [encode](#encode)
   - [decode](#decode)
+  - [Bugs](#bugs)
+    - [size paraeter not working](#size-paraeter-not-working)
+    - [Wierd ascii](#wierd-ascii)
 
 ## instalation
 
@@ -46,3 +49,18 @@ With files:
 
 Export to a file:
 `python rsa.py crypt -k monRSA.pub -t "my test Text" -o output.txt`
+
+## Bugs
+
+This implementation is far from perfect.
+
+### size paraeter not working
+
+The -s param is not working correctly, don't expect anything from it
+### Wierd ascii
+
+It may happen that sometimes some invisble asci characters are generated at the start of the decoded string, like this :
+
+![Sample of the error](https://i.imgur.com/0Gm7Pzt.png)
+
+This is not visible when you use it in the console (so i suggest you do that and hide the error).

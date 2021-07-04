@@ -34,18 +34,33 @@ def generateKeyFile(n: int, e: int, typ: str, filename: str):
         print("wrong type")
         return
 
-def generateKeys(filename: str="monRSA"):
+def generateKeys(filename: str="monRSA", keylength: int=10):
     """
     General all the required numbers
     """
-    p = primesieve.nth_prime(97885344)
-    q = primesieve.nth_prime(85785656)
-    #p = nth_prime(1256)
-    #q = nth_prime(1478)
+    minn = int("1".ljust(int(keylength/2), '0'))
+    maxx = int("9".ljust(int(keylength/2), '9'))
+    if args.verbose : print("min max of the possble primes :", minn, maxx)
+    pos1 = randint(minn, maxx)
+    pos2 = randint(minn, maxx)
+
+    if args.verbose : print("position of the primes chosen :", pos1, pos2)
+    p = primesieve.nth_prime(pos1)
+    q = primesieve.nth_prime(pos2)
+    
+    # fixed values used to generate my key paire (i don't care if you hack me)
+    # p = primesieve.nth_prime(97885344)
+    # q = primesieve.nth_prime(85785656)
+    
+    # smaller primes used for testing
+    # p = nth_prime(1256)
+    # q = nth_prime(1478)
+    
     if args.verbose : print("p", p)
     if args.verbose : print("q", q)
     n = p*q
     if args.verbose : print("n", n)
+    if args.verbose : print("length", len(str(n)))
     nn = (p-1)*(q-1)
     if args.verbose : print("nn",nn)
     temp = genED(nn)
@@ -320,7 +335,7 @@ def parse_args():
     parser.add_argument("-k", "--key", help="key to use", type=str, default="")
     parser.add_argument("-t", "--text", help="text to encrypt", type=str, default="")
     parser.add_argument("-f", "--filename", help="name of the keys to use", type=str, default="monRSA")
-    parser.add_argument("-s", "--size", help="size of the key size", type=int, default="10")
+    parser.add_argument("-s", "--size", help="size of the key generated", type=int, default="10")
     parser.add_argument("-i", "--input", help="use a text file instead of a string", type=str, default="")
     parser.add_argument("-o", "--output", help="name of the file to output instead of printing the output", type=str, default="")
     parser.add_argument("-v", "--verbose", help="Talk more", action="store_true")
@@ -330,18 +345,18 @@ def parse_args():
 args = parse_args()
 if(args.verbose):
     print("Arguments :")
-    print(args.verbose)
-    print(args.action)
-    print(args.key)
-    print(args.text)
-    print(args.filename)
-    print(args.input)
-    print(args.output)
-    print(args.size)
+    print("verbose :",args.verbose)
+    print("action :",args.action)
+    print("key :",args.key)
+    print("text :",args.text)
+    print("filename :",args.filename)
+    print("input :",args.input)
+    print("output :",args.output)
+    print("size :",args.size)
     print("end arguments")
 
 if args.action == "keygen":
-    generateKeys(args.filename)      
+    generateKeys(args.filename,args.size )      
 elif args.action == "crypt":
     encode(args.key, args.text, args.input, args.output)
 elif args.action == "decrypt":
